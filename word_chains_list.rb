@@ -40,6 +40,7 @@ class WordChainer
   def explore_current_words(source)
     @current_words = [source]
     @new_current_words = []
+    @adjacent_word_group = []
     steps = 1
     until @current_words.empty? 
       @new_current_words = []
@@ -47,14 +48,26 @@ class WordChainer
         # puts "current word: #{word}"
         adjacent_words(word).each do |adjacent|
           next if @all_seen_words.include?(adjacent)
+          # debugger
           @all_seen_words[adjacent] = word
           @new_current_words << adjacent
+          @adjacent_word_group << adjacent
+          # debug - shows progress
+          $stderr.print "."
         end
       end
       dump_status_list if $debug
       @current_words = @new_current_words
       steps += 1
     end
+    # new return: total reachable words, step count
+    if $debug
+      puts "explore_current_words debug: "
+      p @current_words.count
+      p steps
+    end
+    
+    return [@adjacent_word_group.count, steps]
   end # /explore_current_words
   
   def dump_status_list
@@ -81,16 +94,27 @@ class WordChainer
   end # /build_path
   
   def exhaustive_list
+    # @all_seen_words = []
+    @all_seen_words = {"a" => nil}
+    
+    
+    #print header
+    puts "# count\tsteps\tword"
+    
     # make a set of all the words in the dictionary
+    # i thought i'd delete words as we went along, but n/m
     # iterate over the set. 
+    @dictionary.each do |word|
       # skip it if word's already been seen. 
+      next if @all_seen_words.include?(word)
+      
       # find the set of reachable words 
         # instead of run, try explore_current_words
-      # add those words to the overall seen list? 
-      # put the count of words, the max steps, and initial word in results[]
+      word_count, steps = explore_current_words(word)
       
-    #print output: 
-    # set_count max_steps initial_word
+      # print output - TSV, baby
+      puts "#{word_count}\t#{steps}\t#{word}"
+    end # each word
   end
   
 end
@@ -125,4 +149,12 @@ def testing
   # p chainer.run "chunder", "plunder"
 end # /testing
 
-testing
+def all_the_words
+  # $debug = true
+  chainer = WordChainer.new
+  chainer.exhaustive_list
+end
+
+# testing
+
+all_the_words
