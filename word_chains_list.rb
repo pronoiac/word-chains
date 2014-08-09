@@ -13,6 +13,7 @@ class WordChainer
       word.chomp!
       @dictionary << word
     end
+    @dict_count = @dictionary.count
   end 
   
   def adjacent_words(word)
@@ -38,12 +39,19 @@ class WordChainer
   end
   
   def explore_current_words(source)
+    if $debug[1]
+      $stderr.puts "\nExploring: #{source}..."
+    end
     @current_words = [source]
     @new_current_words = []
     @adjacent_word_group = []
     steps = 1
+    word_count = 1
     until @current_words.empty? 
       @new_current_words = []
+      if $debug[2]
+        $stderr.print "#{steps}: "
+      end
       @current_words.each do |word|
         # puts "current word: #{word}"
         adjacent_words(word).each do |adjacent|
@@ -51,23 +59,29 @@ class WordChainer
           # debugger
           @all_seen_words[adjacent] = word
           @new_current_words << adjacent
-          @adjacent_word_group << adjacent
+          word_count += 1
           # debug - shows progress
-          $stderr.print "."
+          if $debug[3]
+            $stderr.print "."
+          end
         end
       end
-      dump_status_list if $debug
+      if $debug[2]
+        $stderr.puts " #{word_count}"
+      end
+      
+      dump_status_list if $debug[0]
       @current_words = @new_current_words
       steps += 1
     end
     # new return: total reachable words, step count
-    if $debug
+    if $debug[4] # eh. 
       puts "explore_current_words debug: "
       p @current_words.count
       p steps
     end
     
-    return [@adjacent_word_group.count, steps]
+    return [word_count, steps]
   end # /explore_current_words
   
   def dump_status_list
@@ -95,7 +109,8 @@ class WordChainer
   
   def exhaustive_list
     # @all_seen_words = []
-    @all_seen_words = {"a" => nil}
+    @all_seen_words = {"asdf" => nil}
+    total_word_count = 0
     
     
     #print header
@@ -111,9 +126,14 @@ class WordChainer
       # find the set of reachable words 
         # instead of run, try explore_current_words
       word_count, steps = explore_current_words(word)
+      total_word_count += word_count
       
       # print output - TSV, baby
       puts "#{word_count}\t#{steps}\t#{word}"
+      if $debug[5]
+        $stderr.print "Total words: #{total_word_count} of #{@dict_count} = "
+        $stderr.puts "#{total_word_count.to_f / @dict_count * 100}%"
+      end
     end # each word
   end
   
@@ -150,10 +170,19 @@ def testing
 end # /testing
 
 def all_the_words
-  # $debug = true
+  $debug = [false, true, true, true, false, true]
   chainer = WordChainer.new
   chainer.exhaustive_list
 end
+
+# $debug[n], n:
+  # 0 - dump new words at the end of each step
+  # 1 - put "exploring: " to stderr
+  # 2 - print "." for each new word
+  # 3 - put step # & cumulative word count 
+  # 4 - ECW debug. 
+  # 5 - print totals after each word, to stderr
+
 
 # testing
 
