@@ -80,6 +80,19 @@ class WordChainer
     path.reverse
   end # /build_path
   
+  def exhaustive_list
+    # make a set of all the words in the dictionary
+    # iterate over the set. 
+      # skip it if word's already been seen. 
+      # find the set of reachable words 
+        # instead of run, try explore_current_words
+      # add those words to the overall seen list? 
+      # put the count of words, the max steps, and initial word in results[]
+      
+    #print output: 
+    # set_count max_steps initial_word
+  end
+  
 end
 
 def testing
